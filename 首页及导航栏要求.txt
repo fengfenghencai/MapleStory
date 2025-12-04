@@ -1,0 +1,28 @@
+现在按照要求修改导航栏、首页界面及尾栏
+网页在浏览器的名称为：[img.png]枫叶物语[枫叶logo] （img.png图片已提供，枫叶logo需要你来给出）
+导航栏：
+- Liu Feng这个修改成 [img.png]枫叶物语，并将这个放置在最左端
+首页（重做）：
+进来同https://siyuan.ink/ 的首页一样：
+- 整体一面居中：
+
+"Hi, I'm LiuFeng
+Welcome to My Maple Story                                 [img.png]这个图片可以来个动态的轻微上下晃动
+Sharing interesting tools and documenting life.
+[github logo] [twitter logo] [邮箱 logo]
+"
+
+最底下"别有一番枫味"
+并加上一个动态的[滚轮logo]
+
+- 向下滑了之后:
+三个块并排：第一个块展示最新的文章、第二个展示最好的项目、第三个展示一个工具。
+
+尾栏：
+照我所修改的风格自由发挥修改一下即可。
+
+
+
+
+
+

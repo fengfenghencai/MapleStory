@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 导入 Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* 基础样式重置 */
+@layer base {
+  /* 平滑滚动 */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* 默认样式 */
+  body {
+    @apply bg-neutral-50 text-neutral-800 antialiased;
+    @apply dark:bg-neutral-950 dark:text-neutral-100;
+    @apply transition-colors duration-300;
+  }
+
+  /* 选中文本样式 */
+  ::selection {
+    @apply bg-primary-200 text-primary-900;
+  }
+
+  .dark ::selection {
+    @apply bg-primary-800 text-primary-100;
+  }
+
+  /* 滚动条样式 */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-neutral-100 dark:bg-neutral-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-300 dark:bg-neutral-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral-400 dark:bg-neutral-600;
+  }
+
+  /* 链接样式 */
+  a {
+    @apply transition-colors duration-200;
+  }
+
+  /* 标题样式 */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+/* 组件样式 */
+@layer components {
+  /* 容器 */
+  .container-main {
+    @apply max-w-5xl mx-auto px-6 sm:px-8 lg:px-12;
+  }
+
+  /* 页面标题 */
+  .page-title {
+    @apply text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-neutral-50;
+    @apply mb-4;
+  }
+
+  /* 页面描述 */
+  .page-description {
+    @apply text-lg text-neutral-600 dark:text-neutral-400;
+    @apply leading-relaxed;
+  }
+
+  /* 卡片样式 */
+  .card {
+    @apply bg-white dark:bg-neutral-900;
+    @apply border border-neutral-200 dark:border-neutral-800;
+    @apply rounded-xl;
+    @apply transition-all duration-300;
+    @apply hover:shadow-lg hover:shadow-neutral-200/50 dark:hover:shadow-neutral-900/50;
+    @apply hover:border-neutral-300 dark:hover:border-neutral-700;
+  }
+
+  /* 按钮基础样式 */
+  .btn {
+    @apply inline-flex items-center justify-center;
+    @apply px-4 py-2 rounded-lg;
+    @apply font-medium text-sm;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn;
+    @apply bg-neutral-900 dark:bg-neutral-100;
+    @apply text-neutral-50 dark:text-neutral-900;
+    @apply hover:bg-neutral-800 dark:hover:bg-neutral-200;
+    @apply focus:ring-neutral-500;
+  }
+
+  .btn-secondary {
+    @apply btn;
+    @apply bg-neutral-100 dark:bg-neutral-800;
+    @apply text-neutral-700 dark:text-neutral-300;
+    @apply hover:bg-neutral-200 dark:hover:bg-neutral-700;
+    @apply focus:ring-neutral-400;
+  }
+
+  .btn-ghost {
+    @apply btn;
+    @apply bg-transparent;
+    @apply text-neutral-600 dark:text-neutral-400;
+    @apply hover:bg-neutral-100 dark:hover:bg-neutral-800;
+    @apply hover:text-neutral-900 dark:hover:text-neutral-100;
+  }
+
+  /* 标签样式 */
+  .tag {
+    @apply inline-flex items-center;
+    @apply px-2.5 py-0.5 rounded-full;
+    @apply text-xs font-medium;
+    @apply bg-neutral-100 dark:bg-neutral-800;
+    @apply text-neutral-600 dark:text-neutral-400;
+    @apply transition-colors duration-200;
+  }
+
+  .tag-primary {
+    @apply tag;
+    @apply bg-primary-100 dark:bg-primary-900/30;
+    @apply text-primary-700 dark:text-primary-300;
+  }
+
+  /* 输入框样式 */
+  .input {
+    @apply w-full px-4 py-3;
+    @apply bg-white dark:bg-neutral-900;
+    @apply border border-neutral-200 dark:border-neutral-800;
+    @apply rounded-lg;
+    @apply text-neutral-900 dark:text-neutral-100;
+    @apply placeholder:text-neutral-400 dark:placeholder:text-neutral-600;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500/50;
+    @apply focus:border-primary-500 dark:focus:border-primary-400;
+    @apply transition-all duration-200;
+  }
+
+  /* 文章内容样式 */
+  .prose-custom {
+    @apply prose prose-neutral dark:prose-invert max-w-none;
+    @apply prose-headings:font-semibold prose-headings:tracking-tight;
+    @apply prose-a:text-primary-600 dark:prose-a:text-primary-400;
+    @apply prose-a:no-underline hover:prose-a:underline;
+    @apply prose-code:bg-neutral-100 dark:prose-code:bg-neutral-800;
+    @apply prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded;
+    @apply prose-code:before:content-none prose-code:after:content-none;
+    @apply prose-pre:bg-neutral-900 dark:prose-pre:bg-neutral-950;
+    @apply prose-pre:border prose-pre:border-neutral-800;
+    @apply prose-img:rounded-lg prose-img:shadow-md;
+  }
+}
+
+/* 工具类 */
+@layer utilities {
+  /* 文字渐变 */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900;
+  }
+
+  .dark .text-gradient {
+    @apply from-neutral-100 via-neutral-300 to-neutral-100;
+  }
+
+  /* 玻璃态效果 */
+  .glass {
+    @apply bg-white/80 dark:bg-neutral-950/80;
+    @apply backdrop-blur-md;
+    @apply border border-neutral-200/50 dark:border-neutral-800/50;
+  }
+
+  /* 动画延迟 */
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+  .animate-delay-400 { animation-delay: 400ms; }
+  .animate-delay-500 { animation-delay: 500ms; }
+
+  /* 无滚动条 */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
