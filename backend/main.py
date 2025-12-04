@@ -3,18 +3,34 @@ Personal Website Backend
 基于 FastAPI 构建的后端服务
 """
 
-from fastapi import FastAPI, HTTPException, Query
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
-import httpx
+
+# 导入 GitHub 模块
+from github import router as github_router, startup_event, shutdown_event
+
+
+# 生命周期管理
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    # 启动时执行
+    await startup_event()
+    yield
+    # 关闭时执行
+    await shutdown_event()
+
 
 # 创建 FastAPI 应用
 app = FastAPI(
     title="Personal Website API",
     description="个人网站后端 API 服务",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # 配置 CORS
@@ -28,6 +44,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 注册 GitHub 路由
+app.include_router(github_router)
 
 
 # ========== 数据模型 ==========
@@ -44,18 +63,6 @@ class ContactResponse(BaseModel):
     """联系表单响应模型"""
     success: bool
     message: str
-
-
-class GitHubRepo(BaseModel):
-    """GitHub 仓库模型"""
-    name: str
-    description: Optional[str]
-    html_url: str
-    stargazers_count: int
-    forks_count: int
-    language: Optional[str]
-    topics: list[str]
-    updated_at: str
 
 
 class CSDNArticle(BaseModel):
@@ -100,9 +107,6 @@ async def submit_contact(message: ContactMessage):
     - 存储到数据库
     - 发送到 Slack/Discord
     """
-    # TODO: 实现实际的消息处理逻辑
-    # 例如发送邮件或存储到数据库
-
     print(f"收到联系消息: {message.name} <{message.email}>")
     print(f"主题: {message.subject}")
     print(f"内容: {message.message}")
@@ -113,119 +117,13 @@ async def submit_contact(message: ContactMessage):
     )
 
 
-# ========== GitHub API 集成 ==========
-
-GITHUB_API_BASE = "https://api.github.com"
-GITHUB_USERNAME = "your-username"  # 替换为你的 GitHub 用户名
-
-
-@app.get("/api/github/repos", response_model=list[GitHubRepo])
-async def get_github_repos(
-    limit: int = Query(default=10, ge=1, le=100),
-    sort: str = Query(default="updated", enum=["updated", "stars", "name"]),
-):
-    """
-    获取 GitHub 仓库列表
-
-    Args:
-        limit: 返回数量限制
-        sort: 排序方式
-    """
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                f"{GITHUB_API_BASE}/users/{GITHUB_USERNAME}/repos",
-                params={
-                    "per_page": limit,
-                    "sort": "updated" if sort == "updated" else "full_name",
-                },
-                headers={
-                    "Accept": "application/vnd.github.v3+json",
-                    # 如果有 token，可以添加：
-                    # "Authorization": f"token {GITHUB_TOKEN}"
-                },
-            )
-            response.raise_for_status()
-
-            repos = response.json()
-
-            # 如果按 stars 排序
-            if sort == "stars":
-                repos = sorted(repos, key=lambda x: x.get("stargazers_count", 0), reverse=True)
-
-            return [
-                GitHubRepo(
-                    name=repo["name"],
-                    description=repo.get("description"),
-                    html_url=repo["html_url"],
-                    stargazers_count=repo.get("stargazers_count", 0),
-                    forks_count=repo.get("forks_count", 0),
-                    language=repo.get("language"),
-                    topics=repo.get("topics", []),
-                    updated_at=repo.get("updated_at", ""),
-                )
-                for repo in repos[:limit]
-            ]
-
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(
-                status_code=e.response.status_code,
-                detail=f"GitHub API 请求失败: {str(e)}"
-            )
-        except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"获取仓库列表失败: {str(e)}"
-            )
-
-
-@app.get("/api/github/user")
-async def get_github_user():
-    """获取 GitHub 用户信息"""
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                f"{GITHUB_API_BASE}/users/{GITHUB_USERNAME}",
-                headers={"Accept": "application/vnd.github.v3+json"},
-            )
-            response.raise_for_status()
-
-            user = response.json()
-            return {
-                "login": user["login"],
-                "name": user.get("name"),
-                "avatar_url": user["avatar_url"],
-                "bio": user.get("bio"),
-                "public_repos": user["public_repos"],
-                "followers": user["followers"],
-                "following": user["following"],
-                "html_url": user["html_url"],
-            }
-
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(
-                status_code=e.response.status_code,
-                detail=f"GitHub API 请求失败: {str(e)}"
-            )
-
-
 # ========== CSDN API 集成（示例）==========
-
-# 注意：CSDN 没有官方公开 API，以下为示例结构
-# 实际使用时可能需要通过爬虫或其他方式获取数据
 
 @app.get("/api/csdn/articles", response_model=list[CSDNArticle])
 async def get_csdn_articles(limit: int = Query(default=10, ge=1, le=50)):
     """
     获取 CSDN 文章列表（示例数据）
-
-    注意：CSDN 没有官方公开 API
-    实际项目中需要：
-    1. 使用 CSDN 开放平台 API（如果有）
-    2. 或者自行爬取数据
-    3. 或者手动维护文章列表
     """
-    # 示例数据
     sample_articles = [
         CSDNArticle(
             title="深入理解 Python 异步编程",
@@ -261,5 +159,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=False,  # 禁用热重载，避免调度器重复启动
+        workers=1,
     )

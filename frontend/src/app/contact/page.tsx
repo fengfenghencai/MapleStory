@@ -126,7 +126,7 @@ export default function ContactPage() {
                 </span>
               </div>
               <p className="text-neutral-900 dark:text-neutral-100">
-                中国 · 北京
+                中国
               </p>
             </div>
           </div>

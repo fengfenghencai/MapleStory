@@ -1,223 +1,325 @@
-import { Metadata } from 'next'
-import { AnimateIn, StaggerContainer, StaggerItem } from '@/components/AnimateIn'
-import { ExternalLink, Github, Star, GitFork } from 'lucide-react'
+'use client'
 
-export const metadata: Metadata = {
-  title: '项目',
-  description: '我的开源项目和作品集',
+import { useState, useEffect, useMemo } from 'react'
+import { Github, MapPin, Link as LinkIcon, Star, GitFork, Clock, RefreshCw } from 'lucide-react'
+
+// 配置项
+const MAX_RECENT_REPOS = 6
+const API_BASE_URL = 'http://localhost:8000'
+
+// 类型定义
+interface UserInfo {
+  login: string
+  name: string | null
+  avatar_url: string
+  bio: string | null
+  location: string | null
+  blog: string | null
+  public_repos: number
+  followers: number
+  following: number
+  html_url: string
 }
 
-// 项目数据（示例数据，后续可接入 GitHub API）
-const projects = [
-  {
-    name: 'Personal Website',
-    description: '基于 Next.js 14 和 TailwindCSS 构建的个人网站，支持深色模式和响应式设计。',
-    tags: ['Next.js', 'TypeScript', 'TailwindCSS'],
-    github: 'https://github.com/username/personal-website',
-    demo: 'https://example.com',
-    stars: 128,
-    forks: 32,
-    featured: true,
-  },
-  {
-    name: 'API Gateway',
-    description: '高性能 API 网关，支持限流、熔断、负载均衡等功能。使用 Go 语言开发。',
-    tags: ['Go', 'API Gateway', 'Microservices'],
-    github: 'https://github.com/username/api-gateway',
-    stars: 256,
-    forks: 48,
-    featured: true,
-  },
-  {
-    name: 'CLI Tool',
-    description: '命令行工具集，包含文件处理、文本转换、系统监控等实用功能。',
-    tags: ['Python', 'CLI', 'Automation'],
-    github: 'https://github.com/username/cli-tool',
-    stars: 89,
-    forks: 15,
-    featured: false,
-  },
-  {
-    name: 'Blog Engine',
-    description: '轻量级博客引擎，支持 Markdown、代码高亮、SEO 优化等功能。',
-    tags: ['Node.js', 'Markdown', 'SSG'],
-    github: 'https://github.com/username/blog-engine',
-    demo: 'https://blog-demo.example.com',
-    stars: 167,
-    forks: 28,
-    featured: false,
-  },
-  {
-    name: 'Data Visualization',
-    description: '数据可视化库，提供多种图表类型，支持响应式和交互动画。',
-    tags: ['React', 'D3.js', 'Data Viz'],
-    github: 'https://github.com/username/data-viz',
-    demo: 'https://dataviz.example.com',
-    stars: 203,
-    forks: 41,
-    featured: true,
-  },
-  {
-    name: 'Auth Service',
-    description: '身份认证服务，支持 OAuth2.0、JWT、多因素认证等多种认证方式。',
-    tags: ['Python', 'FastAPI', 'Security'],
-    github: 'https://github.com/username/auth-service',
-    stars: 145,
-    forks: 22,
-    featured: false,
-  },
-]
+interface Repo {
+  id: number
+  name: string
+  description: string | null
+  html_url: string
+  stargazers_count: number
+  forks_count: number
+  language: string | null
+  created_at: string
+  updated_at: string
+  pushed_at: string
+  commit_count: number
+}
+
+interface GitHubData {
+  user_info: UserInfo
+  repos: Repo[]
+  total_commits: number
+  last_sync_time: string
+}
+
+// 预设主题色
+const PRESET_COLORS = ['#0F52BA', '#8B0000', '#2E4E3A', '#4B0082', '#8B4513']
 
 export default function ProjectsPage() {
-  const featuredProjects = projects.filter((p) => p.featured)
-  const otherProjects = projects.filter((p) => !p.featured)
+  const [githubData, setGithubData] = useState<GitHubData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState('')
+  const [currentColor, setCurrentColor] = useState('#8B0000')
+
+  // 获取 GitHub 数据（从后端数据库）
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      setErrorMsg('')
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/github/data`)
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.detail || `请求失败: ${response.status}`)
+        }
+        const data: GitHubData = await response.json()
+        setGithubData(data)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : '未知错误'
+        if (message.includes('数据库中无') || message.includes('暂无有效同步')) {
+          setErrorMsg('GitHub 数据正在同步中，请稍后刷新页面...')
+        } else {
+          setErrorMsg(`获取数据失败: ${message}`)
+        }
+        console.error('GitHub 数据请求错误:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // 计算统计数据
+  const totalStars = useMemo(() => {
+    if (!githubData?.repos) return 0
+    return githubData.repos.reduce((sum, repo) => sum + repo.stargazers_count, 0)
+  }, [githubData?.repos])
+
+  const totalForks = useMemo(() => {
+    if (!githubData?.repos) return 0
+    return githubData.repos.reduce((sum, repo) => sum + repo.forks_count, 0)
+  }, [githubData?.repos])
+
+  // 使用后端返回的 total_commits（从数据库获取，已精确计算）
+  const totalCommits = githubData?.total_commits || 0
+
+  // 最近活跃仓库（按推送时间排序）
+  const recentRepos = useMemo(() => {
+    if (!githubData?.repos) return []
+    return [...githubData.repos]
+      .sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime())
+      .slice(0, MAX_RECENT_REPOS)
+  }, [githubData?.repos])
+
+  // 格式化日期
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).replace(/\//g, '-')
+  }
+
+  const userInfo = githubData?.user_info
 
   return (
-    <div className="container-main py-12 md:py-16">
-      {/* 页面标题 */}
-      <AnimateIn>
-        <header className="mb-12">
-          <h1 className="page-title">项目</h1>
-          <p className="page-description">
-            我的开源项目和作品集，涵盖 Web 开发、工具库和系统设计
-          </p>
-        </header>
-      </AnimateIn>
-
-      {/* 精选项目 */}
-      {featuredProjects.length > 0 && (
-        <section className="mb-16">
-          <AnimateIn>
-            <h2 className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-6">
-              精选项目
-            </h2>
-          </AnimateIn>
-
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {featuredProjects.map((project) => (
-              <StaggerItem key={project.name}>
-                <ProjectCard project={project} featured />
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </section>
+    <div className="max-w-7xl mx-auto px-4 py-8 min-h-screen">
+      {/* 加载状态 */}
+      {isLoading && (
+        <div className="text-center py-10">
+          <div className="inline-block w-10 h-10 border-4 border-neutral-200 dark:border-neutral-700 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="mt-3 text-neutral-600 dark:text-neutral-300">加载 GitHub 数据中...</p>
+        </div>
       )}
 
-      {/* 其他项目 */}
-      {otherProjects.length > 0 && (
-        <section>
-          <AnimateIn>
-            <h2 className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-6">
-              更多项目
-            </h2>
-          </AnimateIn>
-
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {otherProjects.map((project) => (
-              <StaggerItem key={project.name}>
-                <ProjectCard project={project} />
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </section>
+      {/* 错误提示 */}
+      {errorMsg && (
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-6">
+          <p>{errorMsg}</p>
+        </div>
       )}
 
-      {/* GitHub 链接 */}
-      <AnimateIn delay={0.3}>
-        <div className="mt-16 text-center">
-          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-            查看更多项目
-          </p>
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary gap-2"
-          >
-            <Github className="w-4 h-4" />
-            访问 GitHub
-          </a>
-        </div>
-      </AnimateIn>
-    </div>
-  )
-}
+      {/* 内容区域 */}
+      {!isLoading && !errorMsg && userInfo && (
+        <>
+          {/* 1. GitHub 用户基本信息区 */}
+          <div className="mb-10 bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-sm dark:shadow-neutral-900/50 transition-all duration-300">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+              {/* 头像 */}
+              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-neutral-100 dark:border-neutral-700">
+                <img
+                  src={userInfo.avatar_url}
+                  alt={`${userInfo.login}的GitHub头像`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* 基本信息 */}
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+                  {userInfo.name || userInfo.login}
+                </h1>
+                {userInfo.bio && (
+                  <p className="text-neutral-600 dark:text-neutral-300 mb-4 max-w-2xl">
+                    {userInfo.bio}
+                  </p>
+                )}
+                <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm">
+                  <a
+                    href={userInfo.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-neutral-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  >
+                    <Github className="w-4 h-4 mr-1" /> GitHub主页
+                  </a>
+                  {userInfo.location && (
+                    <span className="flex items-center text-neutral-500 dark:text-neutral-400">
+                      <MapPin className="w-4 h-4 mr-1" /> {userInfo.location}
+                    </span>
+                  )}
+                  {userInfo.blog && (
+                    <a
+                      href={userInfo.blog.startsWith('http') ? userInfo.blog : `https://${userInfo.blog}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-neutral-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                      <LinkIcon className="w-4 h-4 mr-1" /> 个人网站
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* 数据同步时间 */}
+            {githubData?.last_sync_time && (
+              <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-700 flex items-center justify-end text-xs text-neutral-400 dark:text-neutral-500">
+                <RefreshCw className="w-3 h-3 mr-1" />
+                数据更新于: {githubData.last_sync_time}
+              </div>
+            )}
+          </div>
 
-// 项目卡片组件
-interface ProjectCardProps {
-  project: (typeof projects)[0]
-  featured?: boolean
-}
+          {/* 2. 贡献日历及主题控制区 */}
+          <div className="mb-10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100 mb-2 sm:mb-0">
+                GitHub 贡献日历
+              </h2>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-2">
+                  {PRESET_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      style={{ backgroundColor: color }}
+                      className={`w-6 h-6 rounded-full cursor-pointer transition-transform hover:scale-110 border border-neutral-200 dark:border-neutral-700 ${
+                        currentColor === color ? 'ring-2 ring-offset-2 ring-blue-500' : ''
+                      }`}
+                      title={color}
+                      onClick={() => setCurrentColor(color)}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={currentColor}
+                    onChange={(e) => setCurrentColor(e.target.value)}
+                    className="w-8 h-8 p-0 border-0 cursor-pointer rounded"
+                  />
+                  <input
+                    type="text"
+                    value={currentColor}
+                    onChange={(e) => setCurrentColor(e.target.value)}
+                    className="w-24 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow-sm dark:shadow-neutral-900/50">
+              <img
+                src={`https://ghchart.rshah.org/${currentColor.replace('#', '')}/${userInfo.login}`}
+                alt="GitHub贡献日历"
+                className="w-full h-auto rounded dark:opacity-90"
+              />
+            </div>
+          </div>
 
-function ProjectCard({ project, featured = false }: ProjectCardProps) {
-  return (
-    <div
-      className={`card p-6 h-full flex flex-col ${
-        featured ? 'md:p-8' : ''
-      }`}
-    >
-      {/* 标题和链接 */}
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <h3
-          className={`font-semibold text-neutral-900 dark:text-neutral-100 ${
-            featured ? 'text-xl' : 'text-lg'
-          }`}
-        >
-          {project.name}
-        </h3>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <a
-            href={project.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1.5 rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-            aria-label="GitHub"
-          >
-            <Github className="w-4 h-4" />
-          </a>
-          {project.demo && (
-            <a
-              href={project.demo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1.5 rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-              aria-label="Demo"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          )}
-        </div>
-      </div>
+          {/* 3. 核心数据统计区 */}
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100 mb-4">
+              GitHub 数据统计
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-neutral-800 p-5 rounded-lg shadow-sm dark:shadow-neutral-900/50 text-center transition-all duration-300">
+                <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                  {userInfo.public_repos}
+                </div>
+                <div className="text-neutral-500 dark:text-neutral-400">总仓库数</div>
+              </div>
+              <div className="bg-white dark:bg-neutral-800 p-5 rounded-lg shadow-sm dark:shadow-neutral-900/50 text-center transition-all duration-300">
+                <div className="text-4xl font-bold text-yellow-500 dark:text-yellow-400 mb-1">
+                  {totalStars.toLocaleString()}
+                </div>
+                <div className="text-neutral-500 dark:text-neutral-400">累计星标</div>
+              </div>
+              <div className="bg-white dark:bg-neutral-800 p-5 rounded-lg shadow-sm dark:shadow-neutral-900/50 text-center transition-all duration-300">
+                <div className="text-4xl font-bold text-green-600 dark:text-green-400 mb-1">
+                  {totalForks.toLocaleString()}
+                </div>
+                <div className="text-neutral-500 dark:text-neutral-400">累计分支</div>
+              </div>
+              <div className="bg-white dark:bg-neutral-800 p-5 rounded-lg shadow-sm dark:shadow-neutral-900/50 text-center transition-all duration-300">
+                <div className="text-4xl font-bold text-orange-500 dark:text-orange-400 mb-1">
+                  {totalCommits.toLocaleString()}
+                </div>
+                <div className="text-neutral-500 dark:text-neutral-400">总 Commit 数</div>
+              </div>
+            </div>
+          </div>
 
-      {/* 描述 */}
-      <p
-        className={`text-neutral-600 dark:text-neutral-400 leading-relaxed mb-4 flex-grow ${
-          featured ? 'text-base' : 'text-sm'
-        }`}
-      >
-        {project.description}
-      </p>
-
-      {/* 标签 */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {project.tags.map((tag) => (
-          <span key={tag} className="tag text-xs">
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      {/* 统计 */}
-      <div className="flex items-center gap-4 text-xs text-neutral-500 dark:text-neutral-400">
-        <span className="flex items-center gap-1">
-          <Star className="w-3.5 h-3.5" />
-          {project.stars}
-        </span>
-        <span className="flex items-center gap-1">
-          <GitFork className="w-3.5 h-3.5" />
-          {project.forks}
-        </span>
-      </div>
+          {/* 4. 最近活跃仓库 */}
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100 mb-4">
+              最近活跃仓库
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {recentRepos.map((repo) => (
+                <div
+                  key={repo.id}
+                  className="bg-white dark:bg-neutral-800 p-5 rounded-lg shadow-sm dark:shadow-neutral-900/50 hover:shadow-md dark:hover:shadow-neutral-700/30 transition-all duration-300"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+                      <a
+                        href={repo.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      >
+                        {repo.name}
+                      </a>
+                    </h3>
+                    {repo.language && (
+                      <span className="bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 text-xs px-2 py-1 rounded-full">
+                        {repo.language}
+                      </span>
+                    )}
+                  </div>
+                  {repo.description && (
+                    <p className="text-neutral-600 dark:text-neutral-300 text-sm mb-3">
+                      {repo.description}
+                    </p>
+                  )}
+                  <div className="flex items-center text-sm text-neutral-500 dark:text-neutral-400 gap-4">
+                    <span className="flex items-center">
+                      <Star className="w-4 h-4 mr-1" /> {repo.stargazers_count}
+                    </span>
+                    <span className="flex items-center">
+                      <GitFork className="w-4 h-4 mr-1" /> {repo.forks_count}
+                    </span>
+                    <span className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" /> {formatDate(repo.created_at)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

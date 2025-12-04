@@ -1,17 +1,35 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Github, Twitter, Mail, ChevronDown, FileText, Folder, Wrench } from 'lucide-react'
+import { Github, Twitter, Mail, ChevronDown, FileText, Folder, Wrench, Star } from 'lucide-react'
 
-// 社交链接配置
-const socialLinks = [
-  {
-    name: 'GitHub',
-    href: 'https://github.com/fengfenghencai',
-    icon: Github,
-  },
+// API 配置
+const API_BASE_URL = 'http://localhost:8000'
+
+// 类型定义
+interface Repo {
+  id: number
+  name: string
+  description: string | null
+  html_url: string
+  stargazers_count: number
+  forks_count: number
+  language: string | null
+}
+
+interface GitHubData {
+  user_info: {
+    login: string
+    html_url: string
+  }
+  repos: Repo[]
+}
+
+// 社交链接配置（GitHub 链接在组件中动态设置）
+const staticSocialLinks = [
   {
     name: 'Twitter',
     href: 'https://twitter.com',
@@ -31,12 +49,6 @@ const latestPosts = [
   { title: 'TailwindCSS 使用技巧', date: '2024-01-05', slug: '/blog/tailwindcss-tips' },
 ]
 
-// 项目示例数据
-const featuredProjects = [
-  { title: '枫叶物语网站', description: '个人博客与工具集合', href: '/projects' },
-  { title: 'JSON 格式化工具', description: '在线 JSON 美化工具', href: '/tools/json-formatter' },
-]
-
 // 工具示例数据
 const featuredTool = {
   title: 'JSON 格式化工具',
@@ -45,6 +57,37 @@ const featuredTool = {
 }
 
 export default function HomePage() {
+  const [featuredRepos, setFeaturedRepos] = useState<Repo[]>([])
+  const [githubUrl, setGithubUrl] = useState('https://github.com/fengfenghencai')
+  const [isLoading, setIsLoading] = useState(true)
+
+  // 获取 GitHub 数据（从后端数据库）
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/github/data`)
+        if (response.ok) {
+          const data: GitHubData = await response.json()
+          // 按 stars 排序，取前3个作为精选项目
+          const sortedRepos = [...data.repos]
+            .sort((a: Repo, b: Repo) => b.stargazers_count - a.stargazers_count)
+            .slice(0, 3)
+          setFeaturedRepos(sortedRepos)
+          // 设置 GitHub 主页链接
+          if (data.user_info?.html_url) {
+            setGithubUrl(data.user_info.html_url)
+          }
+        }
+      } catch (err) {
+        console.error('获取 GitHub 数据失败:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
   return (
     <div className="min-h-screen">
       {/* Hero Section - 全屏 */}
@@ -100,7 +143,18 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="flex items-center gap-4"
               >
-                {socialLinks.map((social) => (
+                {/* GitHub 链接（动态） */}
+                <a
+                  href={githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-all hover:scale-110"
+                  aria-label="GitHub"
+                >
+                  <Github className="w-6 h-6" />
+                </a>
+                {/* 其他社交链接 */}
+                {staticSocialLinks.map((social) => (
                   <a
                     key={social.name}
                     href={social.href}
@@ -231,23 +285,46 @@ export default function HomePage() {
                   精选项目
                 </h3>
               </div>
-              <ul className="space-y-4">
-                {featuredProjects.map((project) => (
-                  <li key={project.href}>
-                    <Link
-                      href={project.href}
-                      className="block group"
-                    >
-                      <p className="text-neutral-800 dark:text-neutral-200 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors font-medium">
-                        {project.title}
-                      </p>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        {project.description}
-                      </p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-neutral-200 dark:border-neutral-700 border-t-green-600 rounded-full animate-spin"></div>
+                </div>
+              ) : featuredRepos.length === 0 ? (
+                <div className="text-center py-6 text-neutral-500 dark:text-neutral-400 text-sm">
+                  数据同步中，请稍后...
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {featuredRepos.map((repo) => (
+                    <li key={repo.id}>
+                      <a
+                        href={repo.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-neutral-800 dark:text-neutral-200 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors font-medium">
+                            {repo.name}
+                          </p>
+                          <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                            <Star className="w-3 h-3" />
+                            {repo.stargazers_count}
+                          </div>
+                        </div>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                          {repo.description || '暂无描述'}
+                        </p>
+                        {repo.language && (
+                          <span className="inline-block mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                            {repo.language}
+                          </span>
+                        )}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <Link
                 href="/projects"
                 className="inline-block mt-6 text-sm text-green-600 dark:text-green-400 hover:underline"
