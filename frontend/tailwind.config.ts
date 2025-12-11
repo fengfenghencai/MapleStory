@@ -80,9 +80,62 @@ const config: Config = {
         '112': '28rem',
         '128': '32rem',
       },
+      // 自定义 Typography 样式
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+            h1: {
+              fontSize: '2em',
+              fontWeight: '700',
+              marginTop: '1.5em',
+              marginBottom: '0.5em',
+            },
+            h2: {
+              fontSize: '1.5em',
+              fontWeight: '600',
+              marginTop: '1.5em',
+              marginBottom: '0.5em',
+            },
+            h3: {
+              fontSize: '1.25em',
+              fontWeight: '600',
+              marginTop: '1.25em',
+              marginBottom: '0.5em',
+            },
+            h4: {
+              fontSize: '1.1em',
+              fontWeight: '600',
+              marginTop: '1em',
+              marginBottom: '0.5em',
+            },
+            'ul, ol': {
+              paddingLeft: '1.5em',
+              marginTop: '0.75em',
+              marginBottom: '0.75em',
+            },
+            'ul': {
+              listStyleType: 'disc',
+            },
+            'ol': {
+              listStyleType: 'decimal',
+            },
+            'li': {
+              marginTop: '0.25em',
+              marginBottom: '0.25em',
+            },
+            'li > ul, li > ol': {
+              marginTop: '0.25em',
+              marginBottom: '0.25em',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 }
 
 export default config

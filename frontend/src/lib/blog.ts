@@ -3,6 +3,7 @@ import path from 'path'
 import matter from 'gray-matter'
 import { remark } from 'remark'
 import html from 'remark-html'
+import gfm from 'remark-gfm'
 
 // 博客文章目录
 const postsDirectory = path.join(process.cwd(), 'content/blog')
@@ -94,9 +95,20 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   const fileContents = fs.readFileSync(fullPath, 'utf8')
   const { data, content } = matter(fileContents)
 
-  // 将 Markdown 转换为 HTML
-  const processedContent = await remark().use(html).process(content)
-  const contentHtml = processedContent.toString()
+  // 将 Markdown 转换为 HTML（使用 GFM 支持表格、任务列表等）
+  const processedContent = await remark()
+    .use(gfm)
+    .use(html, { sanitize: false })
+    .process(content)
+  let contentHtml = processedContent.toString()
+
+  // 处理图片路径：将相对路径转换为绝对路径
+  // 支持格式：./images/xxx.png, images/xxx.png, ../images/xxx.png
+  // 转换为：/images/blog/{slug}/xxx.png
+  contentHtml = contentHtml.replace(
+    /<img([^>]*?)src="(?!http|\/)(\.\/|\.\.\/)?([^"]+)"([^>]*?)>/g,
+    `<img$1src="/images/blog/${slug}/$3"$4>`
+  )
 
   // 计算阅读时间
   const wordCount = content.length

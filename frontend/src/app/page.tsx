@@ -42,12 +42,14 @@ const staticSocialLinks = [
   },
 ]
 
-// 最新文章示例数据
-const latestPosts = [
-  { title: '如何搭建个人博客', date: '2024-01-15', slug: '/blog/how-to-build-blog' },
-  { title: 'Next.js 14 新特性解析', date: '2024-01-10', slug: '/blog/nextjs-14' },
-  { title: 'TailwindCSS 使用技巧', date: '2024-01-05', slug: '/blog/tailwindcss-tips' },
-]
+// 最新文章类型
+interface LatestPost {
+  slug: string
+  title: string
+  date: string
+  description: string
+  tags: string[]
+}
 
 // 工具示例数据
 const featuredTool = {
@@ -60,6 +62,27 @@ export default function HomePage() {
   const [featuredRepos, setFeaturedRepos] = useState<Repo[]>([])
   const [githubUrl, setGithubUrl] = useState('https://github.com/fengfenghencai')
   const [isLoading, setIsLoading] = useState(true)
+  const [latestPosts, setLatestPosts] = useState<LatestPost[]>([])
+  const [postsLoading, setPostsLoading] = useState(true)
+
+  // 获取最新文章
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/blog/latest?limit=3`)
+        if (response.ok) {
+          const data = await response.json()
+          setLatestPosts(data)
+        }
+      } catch (err) {
+        console.error('获取最新文章失败:', err)
+      } finally {
+        setPostsLoading(false)
+      }
+    }
+
+    fetchPosts()
+  }, [])
 
   // 获取 GitHub 数据（从后端数据库）
   useEffect(() => {
@@ -244,23 +267,37 @@ export default function HomePage() {
                   最新文章
                 </h3>
               </div>
-              <ul className="space-y-4">
-                {latestPosts.map((post) => (
-                  <li key={post.slug}>
-                    <Link
-                      href={post.slug}
-                      className="block group"
-                    >
-                      <p className="text-neutral-800 dark:text-neutral-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors font-medium">
-                        {post.title}
-                      </p>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        {post.date}
-                      </p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {postsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-neutral-200 dark:border-neutral-700 border-t-blue-600 rounded-full animate-spin"></div>
+                </div>
+              ) : latestPosts.length === 0 ? (
+                <div className="text-center py-6 text-neutral-500 dark:text-neutral-400 text-sm">
+                  暂无文章
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {latestPosts.map((post) => (
+                    <li key={post.slug}>
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="block group"
+                      >
+                        <p className="text-neutral-800 dark:text-neutral-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors font-medium">
+                          {post.title}
+                        </p>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                          {new Date(post.date).toLocaleDateString('zh-CN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <Link
                 href="/blog"
                 className="inline-block mt-6 text-sm text-blue-600 dark:text-blue-400 hover:underline"

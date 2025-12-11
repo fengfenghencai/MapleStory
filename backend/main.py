@@ -12,6 +12,8 @@ from datetime import datetime
 
 # 导入 GitHub 模块
 from github import router as github_router, startup_event, shutdown_event
+# 导入博客管理模块
+from blog import router as blog_router
 
 
 # 生命周期管理
@@ -47,6 +49,8 @@ app.add_middleware(
 
 # 注册 GitHub 路由
 app.include_router(github_router)
+# 注册博客管理路由
+app.include_router(blog_router)
 
 
 # ========== 数据模型 ==========
@@ -63,15 +67,6 @@ class ContactResponse(BaseModel):
     """联系表单响应模型"""
     success: bool
     message: str
-
-
-class CSDNArticle(BaseModel):
-    """CSDN 文章模型"""
-    title: str
-    url: str
-    description: Optional[str]
-    created_at: str
-    view_count: int
 
 
 # ========== API 路由 ==========
@@ -115,40 +110,6 @@ async def submit_contact(message: ContactMessage):
         success=True,
         message="消息已发送成功！我会尽快回复您。"
     )
-
-
-# ========== CSDN API 集成（示例）==========
-
-@app.get("/api/csdn/articles", response_model=list[CSDNArticle])
-async def get_csdn_articles(limit: int = Query(default=10, ge=1, le=50)):
-    """
-    获取 CSDN 文章列表（示例数据）
-    """
-    sample_articles = [
-        CSDNArticle(
-            title="深入理解 Python 异步编程",
-            url="https://blog.csdn.net/username/article/details/123456",
-            description="本文深入探讨 Python 的异步编程模型，包括 asyncio、协程等核心概念。",
-            created_at="2024-01-20",
-            view_count=1520,
-        ),
-        CSDNArticle(
-            title="Docker 容器化最佳实践",
-            url="https://blog.csdn.net/username/article/details/123457",
-            description="分享 Docker 容器化部署的最佳实践和常见问题解决方案。",
-            created_at="2024-01-15",
-            view_count=2340,
-        ),
-        CSDNArticle(
-            title="FastAPI 快速入门教程",
-            url="https://blog.csdn.net/username/article/details/123458",
-            description="手把手教你使用 FastAPI 构建高性能 API 服务。",
-            created_at="2024-01-10",
-            view_count=3100,
-        ),
-    ]
-
-    return sample_articles[:limit]
 
 
 # ========== 启动配置 ==========

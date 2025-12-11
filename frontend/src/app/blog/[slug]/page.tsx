@@ -114,15 +114,26 @@ export default async function BlogPostPage({ params }: PageProps) {
         <article
           className="prose prose-neutral dark:prose-invert max-w-none
             prose-headings:font-semibold prose-headings:tracking-tight
-            prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-            prose-p:text-neutral-700 dark:prose-p:text-neutral-300
+            prose-h1:text-3xl prose-h1:mt-8 prose-h1:mb-4
+            prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-3
+            prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-2
+            prose-h4:text-lg prose-h4:mt-4 prose-h4:mb-2
+            prose-p:text-neutral-700 dark:prose-p:text-neutral-300 prose-p:leading-7
             prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline
-            prose-code:bg-neutral-100 dark:prose-code:bg-neutral-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+            prose-strong:text-neutral-900 dark:prose-strong:text-neutral-100
+            prose-code:bg-neutral-100 dark:prose-code:bg-neutral-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:text-neutral-800 dark:prose-code:text-neutral-200
             prose-code:before:content-none prose-code:after:content-none
-            prose-pre:bg-neutral-900 dark:prose-pre:bg-neutral-950 prose-pre:border prose-pre:border-neutral-800
+            prose-pre:bg-neutral-900 dark:prose-pre:bg-neutral-950 prose-pre:border prose-pre:border-neutral-700 dark:prose-pre:border-neutral-800
+            [&_pre_code]:text-neutral-100 [&_pre_code]:bg-transparent
             prose-blockquote:border-l-primary-500 prose-blockquote:bg-neutral-50 dark:prose-blockquote:bg-neutral-900 prose-blockquote:py-1 prose-blockquote:px-4
-            prose-img:rounded-lg prose-img:shadow-md
-            prose-hr:border-neutral-200 dark:prose-hr:border-neutral-800"
+            prose-img:rounded-lg prose-img:shadow-md prose-img:mx-auto
+            prose-hr:border-neutral-200 dark:prose-hr:border-neutral-800
+            prose-ul:list-disc prose-ul:pl-6 prose-ul:my-4
+            prose-ol:list-decimal prose-ol:pl-6 prose-ol:my-4
+            prose-li:my-1 prose-li:text-neutral-700 dark:prose-li:text-neutral-300
+            prose-table:border-collapse prose-table:w-full
+            prose-th:border prose-th:border-neutral-300 dark:prose-th:border-neutral-700 prose-th:px-4 prose-th:py-2 prose-th:bg-neutral-100 dark:prose-th:bg-neutral-800
+            prose-td:border prose-td:border-neutral-300 dark:prose-td:border-neutral-700 prose-td:px-4 prose-td:py-2"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
       </AnimateIn>
