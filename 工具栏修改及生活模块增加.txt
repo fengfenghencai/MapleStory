@@ -1,0 +1,15 @@
+工具模块修改：
+- 把工具模块集成到项目模块的下面
+- 下面是我提供的几个工具，只需要展示我提供的即可,类别可分也可以不用分，注意美观
+- pdf工具：https://www.ilovepdf.com/zh-cn 
+  多合一网页缩略图：参考"D:\TimelessTales\package\website\src\views\tools\Responsive.vue" 对应网址：https://siyuan.ink/tools/responsive 来进行实现。
+  流程图绘制：https://app.diagrams.net/
+  去除视频背景： https://www.unscreen.com/
+  图像处理工具：https://www.iloveimg.com/zh-cn
+  DeepSeek:https://chat.deepseek.com/
+  ChatGPT:https://chatgpt.com/
+
+生活模块新增：
+- 将原来工具模块的位置，改成生活模块
+- 第一版先参考D:\nice_image_shit这个项目（对应网址：https://nice-shit.vercel.app/gallery-wall ） 来实现生活模块，要与我们网站风格契合。
+- 测试图片我放在了D:\MapleStory\image里，自行按照项目进行拿取。每张图片对应的文案可以自行生成。

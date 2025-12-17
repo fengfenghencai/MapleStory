@@ -13,7 +13,7 @@ const navLinks = [
   { href: '/', label: '首页' },
   { href: '/blog', label: '博客' },
   { href: '/projects', label: '项目' },
-  { href: '/tools', label: '工具' },
+  { href: '/life', label: '生活' },
   { href: '/contact', label: '联系' },
 ]
 

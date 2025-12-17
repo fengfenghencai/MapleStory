@@ -35,7 +35,7 @@ const footerLinks = [
     links: [
       { label: '博客', href: '/blog' },
       { label: '项目', href: '/projects' },
-      { label: '工具', href: '/tools' },
+      { label: '生活', href: '/life' },
     ],
   },
   {

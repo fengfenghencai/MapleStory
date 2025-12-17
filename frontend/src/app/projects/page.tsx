@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Github, MapPin, Link as LinkIcon, Star, GitFork, Clock, RefreshCw } from 'lucide-react'
+import Link from 'next/link'
+import { Github, MapPin, Link as LinkIcon, Star, GitFork, Clock, RefreshCw, FileText, Layout, GitBranch, VideoOff, Image, Bot, MessageSquare } from 'lucide-react'
 
 // 配置项
 const MAX_RECENT_REPOS = 6
@@ -44,6 +45,59 @@ interface GitHubData {
 
 // 预设主题色
 const PRESET_COLORS = ['#0F52BA', '#8B0000', '#2E4E3A', '#4B0082', '#8B4513']
+
+// 工具列表
+const tools = [
+  {
+    name: 'PDF 工具',
+    description: '在线 PDF 编辑、合并、压缩、转换',
+    icon: FileText,
+    href: 'https://www.ilovepdf.com/zh-cn',
+    external: true,
+  },
+  {
+    name: '网页缩略图',
+    description: '多设备网页响应式预览工具',
+    icon: Layout,
+    href: '/tools/responsive',
+    external: false,
+  },
+  {
+    name: '流程图绘制',
+    description: '在线绘制流程图、架构图',
+    icon: GitBranch,
+    href: 'https://app.diagrams.net/',
+    external: true,
+  },
+  {
+    name: '视频去背景',
+    description: '自动去除视频背景',
+    icon: VideoOff,
+    href: 'https://www.unscreen.com/',
+    external: true,
+  },
+  {
+    name: '图像处理',
+    description: '在线图片编辑、压缩、格式转换',
+    icon: Image,
+    href: 'https://www.iloveimg.com/zh-cn',
+    external: true,
+  },
+  {
+    name: 'DeepSeek',
+    description: 'DeepSeek AI 对话助手',
+    icon: Bot,
+    href: 'https://chat.deepseek.com/',
+    external: true,
+  },
+  {
+    name: 'ChatGPT',
+    description: 'OpenAI ChatGPT 对话助手',
+    icon: MessageSquare,
+    href: 'https://chatgpt.com/',
+    external: true,
+  },
+]
 
 export default function ProjectsPage() {
   const [githubData, setGithubData] = useState<GitHubData | null>(null)
@@ -320,6 +374,57 @@ export default function ProjectsPage() {
           </div>
         </>
       )}
+
+      {/* 5. 实用工具 */}
+      <div className="mb-10">
+        <h2 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100 mb-4">
+          实用工具
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {tools.map((tool) => {
+            const Icon = tool.icon
+            return tool.external ? (
+              <a
+                key={tool.name}
+                href={tool.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white dark:bg-neutral-800 p-5 rounded-lg shadow-sm dark:shadow-neutral-900/50 hover:shadow-md dark:hover:shadow-neutral-700/30 transition-all duration-300 group flex items-start gap-4"
+              >
+                <div className="p-2.5 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                    {tool.name}
+                  </h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                    {tool.description}
+                  </p>
+                </div>
+              </a>
+            ) : (
+              <Link
+                key={tool.name}
+                href={tool.href}
+                className="bg-white dark:bg-neutral-800 p-5 rounded-lg shadow-sm dark:shadow-neutral-900/50 hover:shadow-md dark:hover:shadow-neutral-700/30 transition-all duration-300 group flex items-start gap-4"
+              >
+                <div className="p-2.5 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                    {tool.name}
+                  </h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                    {tool.description}
+                  </p>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

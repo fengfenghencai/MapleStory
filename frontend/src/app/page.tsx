@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Github, Twitter, Mail, ChevronDown, FileText, Folder, Wrench, Star } from 'lucide-react'
+import { Github, Twitter, Mail, ChevronDown, FileText, Folder, Wrench, Star, Layout, GitBranch, Image as ImageIcon, Bot } from 'lucide-react'
 
 // API 配置
 const API_BASE_URL = 'http://localhost:8000'
@@ -51,12 +51,36 @@ interface LatestPost {
   tags: string[]
 }
 
-// 工具示例数据
-const featuredTool = {
-  title: 'JSON 格式化工具',
-  description: '快速格式化和验证 JSON 数据，支持压缩和美化',
-  href: '/tools/json-formatter',
-}
+// 推荐工具数据
+const featuredTools = [
+  {
+    title: '网页缩略图',
+    description: '多设备网页响应式预览',
+    href: '/tools/responsive',
+    icon: Layout,
+  },
+  {
+    title: '流程图绘制',
+    description: '在线绘制流程图、架构图',
+    href: 'https://app.diagrams.net/',
+    external: true,
+    icon: GitBranch,
+  },
+  {
+    title: '图像处理',
+    description: '在线图片编辑、压缩',
+    href: 'https://www.iloveimg.com/zh-cn',
+    external: true,
+    icon: ImageIcon,
+  },
+  {
+    title: 'DeepSeek',
+    description: 'AI 对话助手',
+    href: 'https://chat.deepseek.com/',
+    external: true,
+    icon: Bot,
+  },
+]
 
 export default function HomePage() {
   const [featuredRepos, setFeaturedRepos] = useState<Repo[]>([])
@@ -386,21 +410,56 @@ export default function HomePage() {
                   推荐工具
                 </h3>
               </div>
+              <ul className="space-y-3">
+                {featuredTools.map((tool) => {
+                  const Icon = tool.icon
+                  const isExternal = 'external' in tool && tool.external
+
+                  if (isExternal) {
+                    return (
+                      <li key={tool.title}>
+                        <a
+                          href={tool.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors group"
+                        >
+                          <Icon className="w-4 h-4 text-neutral-500 dark:text-neutral-400 group-hover:text-orange-600 dark:group-hover:text-orange-400" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                              {tool.title}
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                              {tool.description}
+                            </p>
+                          </div>
+                        </a>
+                      </li>
+                    )
+                  }
+
+                  return (
+                    <li key={tool.title}>
+                      <Link
+                        href={tool.href}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors group"
+                      >
+                        <Icon className="w-4 h-4 text-neutral-500 dark:text-neutral-400 group-hover:text-orange-600 dark:group-hover:text-orange-400" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                            {tool.title}
+                          </p>
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                            {tool.description}
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
               <Link
-                href={featuredTool.href}
-                className="block group"
-              >
-                <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 group-hover:bg-orange-50 dark:group-hover:bg-orange-900/20 transition-colors">
-                  <p className="text-neutral-800 dark:text-neutral-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors font-medium mb-2">
-                    {featuredTool.title}
-                  </p>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    {featuredTool.description}
-                  </p>
-                </div>
-              </Link>
-              <Link
-                href="/tools"
+                href="/projects"
                 className="inline-block mt-6 text-sm text-orange-600 dark:text-orange-400 hover:underline"
               >
                 查看全部 →
