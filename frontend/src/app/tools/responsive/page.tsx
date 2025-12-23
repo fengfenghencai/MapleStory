@@ -31,7 +31,7 @@ const initialDevices: DeviceState[] = [
 ]
 
 export default function ResponsivePage() {
-  const [inputUrl, setInputUrl] = useState('https://siyuan.ink')
+  const [inputUrl, setInputUrl] = useState('http://localhost:3000/life')
   const [currentUrl, setCurrentUrl] = useState('')
   const [devices, setDevices] = useState<DeviceState[]>([...initialDevices.map(d => ({ ...d }))])
   const [maxZIndex, setMaxZIndex] = useState(10)

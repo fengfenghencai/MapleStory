@@ -24,3 +24,7 @@ GITHUB_REST_API = "https://api.github.com"
 BLOG_API_KEY = os.getenv('BLOG_API_KEY', '')  # 博客管理API密钥
 BLOG_CONTENT_DIR = os.getenv('BLOG_CONTENT_DIR', '../frontend/content/blog')  # 博客内容目录
 BLOG_IMAGES_DIR = os.getenv('BLOG_IMAGES_DIR', '../frontend/public/images/blog')  # 博客图片目录
+
+# 生活模块API配置
+LIFE_API_KEY = os.getenv('LIFE_API_KEY', BLOG_API_KEY)  # 生活模块API密钥，默认使用博客API密钥
+LIFE_IMAGES_DIR = os.getenv('LIFE_IMAGES_DIR', '../frontend/public/images/life')  # 生活照片目录

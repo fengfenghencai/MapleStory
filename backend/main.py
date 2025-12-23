@@ -14,6 +14,8 @@ from datetime import datetime
 from github import router as github_router, startup_event, shutdown_event
 # 导入博客管理模块
 from blog import router as blog_router
+# 导入生活模块
+from life import router as life_router
 
 
 # 生命周期管理
@@ -51,6 +53,8 @@ app.add_middleware(
 app.include_router(github_router)
 # 注册博客管理路由
 app.include_router(blog_router)
+# 注册生活模块路由
+app.include_router(life_router)
 
 
 # ========== 数据模型 ==========
