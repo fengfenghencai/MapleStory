@@ -45,7 +45,6 @@ class PhotoUpdate(BaseModel):
     description: Optional[str] = None
     content: Optional[str] = None
     date: Optional[str] = None
-    likes: Optional[int] = None
 
 
 class PhotoResponse(BaseModel):
@@ -55,7 +54,6 @@ class PhotoResponse(BaseModel):
     description: Optional[str]
     content: Optional[str]
     date: str
-    likes: int
     images: List[PhotoImage]
     created_at: str
     updated_at: str
@@ -67,7 +65,6 @@ class PhotoListItem(BaseModel):
     title: str
     description: Optional[str]
     date: str
-    likes: int
     cover_image: Optional[str]
 
 
@@ -113,7 +110,6 @@ async def list_photos(db: AsyncSession = Depends(get_db)):
             title=photo.title,
             description=photo.description,
             date=photo.date,
-            likes=photo.likes,
             cover_image=cover_img.url if cover_img else None
         ))
 
@@ -145,7 +141,6 @@ async def get_photo(photo_id: int, db: AsyncSession = Depends(get_db)):
         description=photo.description,
         content=photo.content,
         date=photo.date,
-        likes=photo.likes,
         images=[PhotoImage(
             id=img.id,
             url=img.url,
@@ -155,24 +150,6 @@ async def get_photo(photo_id: int, db: AsyncSession = Depends(get_db)):
         created_at=photo.created_at.isoformat() if photo.created_at else "",
         updated_at=photo.updated_at.isoformat() if photo.updated_at else ""
     )
-
-
-@router.post("/photos/{photo_id}/like")
-async def like_photo(photo_id: int, db: AsyncSession = Depends(get_db)):
-    """点赞照片（公开接口，无需认证）"""
-    result = await db.execute(
-        select(LifePhoto).where(LifePhoto.id == photo_id)
-    )
-    photo = result.scalar_one_or_none()
-
-    if not photo:
-        raise HTTPException(status_code=404, detail="照片不存在")
-
-    photo.likes += 1
-    await db.commit()
-    await db.refresh(photo)  # 刷新对象，避免 MissingGreenlet 错误
-
-    return {"success": True, "likes": photo.likes}
 
 
 # ========== 管理接口（需要认证） ==========
@@ -204,8 +181,7 @@ async def create_photo(
         title=photo.title,
         description=photo.description,
         content=photo.content,
-        date=date,
-        likes=0
+        date=date
     )
     db.add(new_photo)
     await db.commit()
@@ -222,7 +198,6 @@ async def create_photo(
         description=new_photo.description,
         content=new_photo.content,
         date=new_photo.date,
-        likes=new_photo.likes,
         images=[],
         created_at=new_photo.created_at.isoformat() if new_photo.created_at else "",
         updated_at=new_photo.updated_at.isoformat() if new_photo.updated_at else ""
@@ -256,8 +231,6 @@ async def update_photo(
         existing_photo.content = photo.content
     if photo.date is not None:
         existing_photo.date = photo.date
-    if photo.likes is not None:
-        existing_photo.likes = photo.likes
 
     existing_photo.updated_at = datetime.now()
     await db.commit()
@@ -277,7 +250,6 @@ async def update_photo(
         description=existing_photo.description,
         content=existing_photo.content,
         date=existing_photo.date,
-        likes=existing_photo.likes,
         images=[PhotoImage(
             id=img.id,
             url=img.url,
