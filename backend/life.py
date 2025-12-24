@@ -170,6 +170,7 @@ async def like_photo(photo_id: int, db: AsyncSession = Depends(get_db)):
 
     photo.likes += 1
     await db.commit()
+    await db.refresh(photo)  # 刷新对象，避免 MissingGreenlet 错误
 
     return {"success": True, "likes": photo.likes}
 
@@ -260,6 +261,7 @@ async def update_photo(
 
     existing_photo.updated_at = datetime.now()
     await db.commit()
+    await db.refresh(existing_photo)  # 刷新对象，避免 MissingGreenlet 错误
 
     # 获取所有图片
     img_result = await db.execute(
